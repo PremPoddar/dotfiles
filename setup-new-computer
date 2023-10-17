@@ -56,6 +56,10 @@ done < brew_installed.txt
 echo "$(tput setaf 2)All the packages are installed.$(tput sgr0)"
 brew cleanup
 echo "$(tput setaf 2)Done with brew.$(tput sgr0)"
+
+#Diming the app icon in dock when hidden
+defaults write com.apple.Dock showhidden -boolean yes; killall Dock
+
 #Deleting the temporary directory
 cd
 echo "$(tput setaf 4)Deleting the temporary directory.$(tput sgr0)"
