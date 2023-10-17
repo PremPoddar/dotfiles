@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Get the default downloads folder from the XDG_DOWNLOAD_DIR environment variable
+download_folder=$(defaults read com.apple.userdomain User\ TemplatePath 2>/dev/null || echo "$HOME/Downloads")
+
+#Go to home directory
+cd
+
+#Make a temporary folder
+temp_folder_name="temp_dotfiles_dir"
+
+if [ -d "$temp_folder_name" ]; then
+  echo "$(tput setaf 1)$temp_folder_name already exists type in another name for the temporay directory:$(tput sgr0)  "
+  read temp_folder_name
+fi
+
+mkdir "$temp_folder_name"
+
+#Moving into the temporary folder
+cd $temp_folder_name
+
+#Downloading the files
+git clone https://github.com/PremPoddar/dotfiles.git
+
+#Copying the dotfiles data to the user's dotfiles
+cd
+
+cp $temp_folder_name/dotfiles/.zshrc .zshrc
+cp $temp_folder_name/dotfiles/.bashrc .bashrc
+echo "$(tput setaf 2)The .zshrc and .bashrc files have been updated.$(tput sgr0)"
+
+#Copying ublock-origin-backup to Downloads
+cp $temp_folder_name/dotfiles/my-ublock-backup.txt $download_folder/my-ublock-backup.txt
+echo "$(tput setaf 2)The my-ublock-backup.txt file has been moved to the Downloads folder.$(tput sgr0)"
+
+#Moving the user-override.js to the user.js folder for arkenfox
+cd $download_folder
+git clone https://github.com/arkenfox/user.js.git
+cp $HOME/$temp_folder_name/dotfiles/user-overrides.js user.js/user-overrides.js
+
+#Checking if brew is installed
+if ! which brew > /dev/null; then
+  echo "$(tput setaf 4)Homebrew is not installed. Installing...$(tput sgr0)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+fi
+
+#Installing Hombrew packages
+cd
+brew update
+brew upgrade
+brew cleanup
+cd $temp_folder_name/dotfiles/
+while read -r package; do
+  brew install "$package"
+done < brew_installed.txt
+echo "$(tput setaf 2)All the packages are installed.$(tput sgr0)"
+brew cleanup
+echo "$(tput setaf 2)Done with brew.$(tput sgr0)"
+#Deleting the temporary directory
+cd
+echo "$(tput setaf 4)Deleting the temporary directory.$(tput sgr0)"
+sudo rm -r $temp_folder_name
+
